@@ -62,9 +62,15 @@ public class FileRepositoryImpl implements FileRepository {
 		query.put("filename", filename);
 		
 		Map<String,Object> result = new HashMap<String,Object>();
-		result.put("stream", database.getStaticFile((String) vhost.getContext("database"), BUCKET, query));
-		result.put("ContentType", database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query).get("contentType"));
-		return result;
+
+		try {
+			result.put("stream", database.getStaticFile((String) vhost.getContext("database"), BUCKET, query));
+			result.put("ContentType", database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query).get("contentType"));
+			return result;
+		} catch (Exception e) {
+
+		}
+		return null;
 	}
 
 	@Override
