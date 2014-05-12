@@ -28,6 +28,11 @@ public class FileRepositoryImpl implements FileRepository {
 	}
 	
 	@Override
+	public Map<String,Object> getFile(VirtualHost vhost, Map<String,Object> query) {
+		return this.database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query);
+	}
+	
+	@Override
 	public Map<String,Object> getFile(VirtualHost vhost, String fileId) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("_id", fileId);

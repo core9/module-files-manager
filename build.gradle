@@ -26,4 +26,7 @@ dependencies {
 	implCompile 'io.core9:module-database-mongodb-api:+'
 	implCompile 'com.google.guava:guava:15.0'
 	
+	testCompile 'io.core9:core:+'
+	testCompile 'io.core9:module-database-mongodb:+'
+	
 }

@@ -1,5 +1,7 @@
 package io.core9.plugin.filesmanager;
 
+import io.core9.plugin.filesmanager.sync.FileHashSyncer;
+import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.request.FileUpload;
 import io.core9.plugin.server.request.Request;
 
@@ -7,6 +9,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +104,17 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 				}
 			}
 			break;
+		}
+	}
+
+	@Override
+	public void syncDirectory(VirtualHost vhost, String directory) {
+		Path dir = Paths.get(directory);
+		try {
+			FileHashSyncer sync = new FileHashSyncer(vhost, repository, directory);
+			Files.walkFileTree(dir, sync);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }
