@@ -35,7 +35,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	
 	@PluginLoaded
 	public void onRepositoryFactoryLoaded(RepositoryFactory factory) throws NoCollectionNamePresentException {
-		factory.getRepository(BucketConf.class);
+		buckets = factory.getRepository(BucketConf.class);
 	}
 
 	@Override
