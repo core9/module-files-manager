@@ -28,7 +28,6 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	@InjectPlugin
 	private FileRepository repository;
 	
-	@InjectPlugin
 	private VertxServer server;
 	
 	@InjectPlugin
@@ -37,8 +36,13 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	private CrudRepository<BucketConf> config;
 	
 	@PluginLoaded
+	public void onVertxServerLoaded(VertxServer server){
+		this.server = server;;
+	}
+	
+	@PluginLoaded
 	public void onRepositoryFactoryLoaded(RepositoryFactory factory) throws NoCollectionNamePresentException {
-		config = factory.getRepository(BucketConf.class);
+		this.config = factory.getRepository(BucketConf.class);
 	}
 	
 	@Override
@@ -69,7 +73,7 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 
 	@Override
 	public void execute() {
-		
+		if(server == null) return;
 		// Adds the default /static/ listener on all vhosts
 		server.use("/static/.*", new Middleware() {
 

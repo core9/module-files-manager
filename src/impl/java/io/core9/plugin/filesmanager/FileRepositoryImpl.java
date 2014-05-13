@@ -22,9 +22,14 @@ public class FileRepositoryImpl implements FileRepository {
 
 	@Override
 	public List<Map<String, Object>> getFolderContents(VirtualHost vhost, String folder) {
+		return getFolderContents((String) vhost.getContext("database"), BUCKET, folder);
+	}
+	
+	@Override
+	public List<Map<String, Object>> getFolderContents(String db, String bucket, String folder) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("metadata.folder", folder);
-		return this.database.queryStaticFiles((String) vhost.getContext("database"), BUCKET, query);
+		return this.database.queryStaticFiles(db, bucket, query);
 	}
 	
 	@Override
@@ -34,31 +39,56 @@ public class FileRepositoryImpl implements FileRepository {
 	
 	@Override
 	public Map<String,Object> getFile(VirtualHost vhost, String fileId) {
+		return this.getFile((String) vhost.getContext("database"), BUCKET, fileId);
+	}
+	
+	@Override
+	public Map<String, Object> getFile(String db, String bucket, String fileId) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("_id", fileId);
-		return this.database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query);
+		return this.database.queryStaticFile(db, bucket, query);
 	}
 
 	@Override
 	public Map<String, Object> addFile(VirtualHost vhost, Map<String,Object> file, InputStream stream) throws IOException {
 		return this.database.addStaticFile((String) vhost.getContext("database"), BUCKET, file, stream);
 	}
+	
+	@Override
+	public Map<String, Object> addFile(String db, String bucket, Map<String,Object> file, InputStream stream) throws IOException {
+		return this.database.addStaticFile(db, bucket, file, stream);
+	}
 
 	@Override
 	public Map<String, Object> saveFile(VirtualHost vhost, Map<String, Object> file, String fileId) {
-		return this.database.saveStaticFile((String) vhost.getContext("database"), BUCKET, file, fileId);
+		return saveFile((String) vhost.getContext("database"), BUCKET, file, fileId);
+	}
+	
+	@Override
+	public Map<String, Object> saveFile(String db, String bucket, Map<String, Object> file, String fileId) {
+		return this.database.saveStaticFile(db, bucket, file, fileId);
 	}
 
 	@Override
 	public void removeFile(VirtualHost vhost, String fileId) {
-		this.database.removeStaticFile((String) vhost.getContext("database"), BUCKET, fileId);
+		removeFile((String) vhost.getContext("database"), BUCKET, fileId);
+	}
+	
+	@Override
+	public void removeFile(String db, String bucket, String fileId) {
+		this.database.removeStaticFile(db, bucket, fileId);
 	}
 
 	@Override
 	public InputStream getFileContents(VirtualHost vhost, String fileId) {
+		return this.getFileContents((String) vhost.getContext("database"), BUCKET, fileId);
+	}
+	
+	@Override
+	public InputStream getFileContents(String db, String bucket, String fileId) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("_id", fileId);
-		return this.database.getStaticFile((String) vhost.getContext("database"), BUCKET, query);
+		return this.database.getStaticFile(db, bucket, query);
 	}
 	
 	@Override
@@ -85,9 +115,14 @@ public class FileRepositoryImpl implements FileRepository {
 
 	@Override
 	public void updateFileContents(VirtualHost vhost, String fileId, InputStream stream) {
+		this.updateFileContents((String) vhost.getContext("database"), BUCKET, fileId, stream);		
+	}
+	
+	@Override
+	public void updateFileContents(String db, String bucket, String fileId, InputStream stream) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("_id", fileId);
-		this.database.saveStaticFileContents((String) vhost.getContext("database"), BUCKET, query, stream);		
+		this.database.saveStaticFileContents(db, bucket, query, stream);
 	}
 
 	@Override

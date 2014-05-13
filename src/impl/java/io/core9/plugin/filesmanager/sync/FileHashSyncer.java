@@ -48,11 +48,13 @@ public class FileHashSyncer implements FileVisitor<Path> {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("filename", strPath);
 		Map<String,Object> file = repository.getFile(vhost, query);
+		InputStream stream = Files.newInputStream(path);
 		if(file == null) {
-			insertFile(Files.newInputStream(path), strPath);
+			insertFile(stream, strPath);
 		} else {
-			updateFile(Files.newInputStream(path), file, strPath);
+			updateFile(stream, file, strPath);
 		}
+		stream.close();
 		return FileVisitResult.CONTINUE;
 	}
 
@@ -82,7 +84,6 @@ public class FileHashSyncer implements FileVisitor<Path> {
 		file.put("filename", filePath);
 		file.put("metadata", metadata);
 		repository.addFile(vhost, file, stream);
-		stream.close();
 	}
 	
 	/**

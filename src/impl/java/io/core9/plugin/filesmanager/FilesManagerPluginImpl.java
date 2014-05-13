@@ -3,7 +3,6 @@ package io.core9.plugin.filesmanager;
 import io.core9.plugin.database.repository.CrudRepository;
 import io.core9.plugin.database.repository.NoCollectionNamePresentException;
 import io.core9.plugin.database.repository.RepositoryFactory;
-import io.core9.plugin.filesmanager.handler.StaticFilesHandler;
 import io.core9.plugin.filesmanager.sync.FileHashSyncer;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.request.FileUpload;
@@ -33,12 +32,6 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	private FileRepository repository;
 	
 	private CrudRepository<BucketConf> buckets;
-	private StaticFilesHandler handler;
-	
-	@PluginLoaded
-	public void onStaticHandlerAvailable(StaticFilesHandler handler) {
-		this.handler = handler;
-	}
 	
 	@PluginLoaded
 	public void onRepositoryFactoryLoaded(RepositoryFactory factory) throws NoCollectionNamePresentException {
@@ -52,12 +45,21 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 
 	@Override
 	public void handle(Request request) {
-		String type = (String) request.getParams().get("type");
-		String id = (String) request.getParams().get("id");
-		if(type == null) {
-			process(request);
-		} else if (id == null) {
-			process(request, type);
+		String fileId = (String) request.getParams().get("type");
+		String bucket = (String) request.getParams().get("bucket");
+		if(bucket != null) {
+			BucketConf conf = buckets.read(request.getVirtualHost(), bucket);
+			if(fileId == null) {
+				process(request, conf);
+			} else {
+				process(request, fileId, conf);
+			}
+		} else {
+			if(fileId == null) {
+				process(request);
+			} else {
+				process(request, fileId);
+			}
 		}
 	}
 	
@@ -95,6 +97,43 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void process(Request request, BucketConf bucket) {
+		switch(request.getMethod()) {
+		case POST:
+			try {
+				if(request.getContext("files") != null) {
+					for(FileUpload file : (List<FileUpload>) request.getContext("files")) {
+						String filename = file.getFilename();
+						Map<String,Object> fileMap = new HashMap<String,Object>();
+						fileMap.put("filename", filename.substring(filename.lastIndexOf('/') + 1));
+						fileMap.put("contentType", file.getContentType());
+						Map<String,Object> metadata = new HashMap<String,Object>();
+						metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
+						metadata.put("type", "File");
+						fileMap.put("metadata", metadata);
+						repository.addFile(bucket.getDatabase(), bucket.getBucket(), fileMap, new FileInputStream(file.getFilepath()));
+						new File(file.getFilepath()).delete();
+					}
+				} else {
+					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getBucket(), request.getBodyAsMap(), this.getClass().getResourceAsStream("/dummy.txt")));
+				}
+			} catch (IOException e) {
+				request.getResponse().setStatusCode(500);
+				request.getResponse().end("500");
+			}
+			break;
+		case GET:
+		default:
+			String folder = (String) request.getParams().get("folder");
+			request.getResponse().sendJsonArray(repository.getFolderContents(bucket.getDatabase(), bucket.getBucket(), folder));
+			break;
+		}
+	}
+	
+	
+	
+	
 	private void process(Request request, String fileId) {
 		switch(request.getMethod()) {
 		case DELETE:
@@ -117,6 +156,35 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			} else {
 				try {
 					request.getResponse().sendBinary(ByteStreams.toByteArray(repository.getFileContents(request.getVirtualHost(), fileId)));
+				} catch (IOException e) {
+					request.getResponse().setStatusCode(404);
+				}
+			}
+			break;
+		}
+	}
+	
+	private void process(Request request, String fileId, BucketConf bucket) {
+		switch(request.getMethod()) {
+		case DELETE:
+			repository.removeFile(bucket.getDatabase(), bucket.getBucket(), fileId);
+			request.getResponse().end();
+			break;
+		case PUT:
+			if(request.getParams().get("contents") == null) {
+				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getBucket(), request.getBodyAsMap(), fileId));
+			} else {
+				// TODO Only supports textual updates, allow files as well
+				repository.updateFileContents(bucket.getDatabase(), bucket.getBucket(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().get("content")).getBytes()));
+			}
+			break;
+		case GET:
+		default:
+			if(request.getParams().get("contents") == null) {
+				request.getResponse().sendJsonMap(repository.getFile(bucket.getDatabase(), bucket.getBucket(), fileId));
+			} else {
+				try {
+					request.getResponse().sendBinary(ByteStreams.toByteArray(repository.getFileContents(bucket.getDatabase(), bucket.getBucket(), fileId)));
 				} catch (IOException e) {
 					request.getResponse().setStatusCode(404);
 				}
