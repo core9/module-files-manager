@@ -63,14 +63,19 @@ public class FileRepositoryImpl implements FileRepository {
 	
 	@Override
 	public Map<String,Object> getFileContentsByName(VirtualHost vhost, String filename) {
+		return getFileContentsByName((String) vhost.getContext("database"), BUCKET, filename);
+	}
+	
+	@Override
+	public Map<String,Object> getFileContentsByName(String db, String bucket, String filename) {
 		Map<String,Object> query = new HashMap<String,Object>();
 		query.put("filename", filename);
 		
 		Map<String,Object> result = new HashMap<String,Object>();
 
 		try {
-			result.put("stream", database.getStaticFile((String) vhost.getContext("database"), BUCKET, query));
-			result.put("ContentType", database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query).get("contentType"));
+			result.put("stream", database.getStaticFile(db, bucket, query));
+			result.put("ContentType", database.queryStaticFile(db, bucket, query).get("contentType"));
 			return result;
 		} catch (Exception e) {
 

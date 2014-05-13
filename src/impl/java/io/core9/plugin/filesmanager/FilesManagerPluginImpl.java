@@ -1,5 +1,9 @@
 package io.core9.plugin.filesmanager;
 
+import io.core9.plugin.database.repository.CrudRepository;
+import io.core9.plugin.database.repository.NoCollectionNamePresentException;
+import io.core9.plugin.database.repository.RepositoryFactory;
+import io.core9.plugin.filesmanager.handler.StaticFilesHandler;
 import io.core9.plugin.filesmanager.sync.FileHashSyncer;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.request.FileUpload;
@@ -17,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.xeoh.plugins.base.annotations.PluginImplementation;
+import net.xeoh.plugins.base.annotations.events.PluginLoaded;
 import net.xeoh.plugins.base.annotations.injections.InjectPlugin;
 
 import com.google.common.io.ByteStreams;
@@ -26,6 +31,19 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	
 	@InjectPlugin
 	private FileRepository repository;
+	
+	private CrudRepository<BucketConf> buckets;
+	private StaticFilesHandler handler;
+	
+	@PluginLoaded
+	public void onStaticHandlerAvailable(StaticFilesHandler handler) {
+		this.handler = handler;
+	}
+	
+	@PluginLoaded
+	public void onRepositoryFactoryLoaded(RepositoryFactory factory) throws NoCollectionNamePresentException {
+		factory.getRepository(BucketConf.class);
+	}
 
 	@Override
 	public String getControllerName() {
@@ -117,4 +135,6 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			e.printStackTrace();
 		}
 	}
+	
+	
 }

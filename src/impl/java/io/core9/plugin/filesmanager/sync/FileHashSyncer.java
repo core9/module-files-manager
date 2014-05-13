@@ -82,6 +82,7 @@ public class FileHashSyncer implements FileVisitor<Path> {
 		file.put("filename", filePath);
 		file.put("metadata", metadata);
 		repository.addFile(vhost, file, stream);
+		stream.close();
 	}
 	
 	/**

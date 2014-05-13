@@ -28,6 +28,8 @@ public interface FileRepository extends Core9Plugin {
 
 	void updateFileContents(VirtualHost vhost, String fileId, InputStream stream);
 
+	Map<String, Object> getFileContentsByName(String database, String bucket, String filename);
+	
 	Map<String, Object> getFileContentsByName(VirtualHost vhost, String filename);
 
 	Map<String, Object> getFile(VirtualHost vhost, Map<String, Object> query);
