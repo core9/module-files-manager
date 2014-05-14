@@ -78,6 +78,14 @@ public class FileRepositoryImpl implements FileRepository {
 	public void removeFile(String db, String bucket, String fileId) {
 		this.database.removeStaticFile(db, bucket, fileId);
 	}
+	
+	@Override
+	public void removeFiles(String db, String bucket, Map<String,Object> query) {
+		List<Map<String,Object>> items = this.database.queryStaticFiles(db, bucket, query);
+		for(Map<String,Object> item : items) {
+			this.database.removeStaticFile(db, bucket, (String) item.get("_id"));
+		}
+	}
 
 	@Override
 	public InputStream getFileContents(VirtualHost vhost, String fileId) {
@@ -127,15 +135,20 @@ public class FileRepositoryImpl implements FileRepository {
 
 	@Override
 	public void ensureFolderExists(VirtualHost vhost, String folderpath) {
+		this.ensureFolderExists((String) vhost.getContext("database"), BUCKET, folderpath);
+	}
+	
+	@Override
+	public void ensureFolderExists(String db, String bucket, String folderpath) {
 		if(!folderpath.equals("/")) {
 			if(folderpath.endsWith("/")) {
 				folderpath = folderpath.substring(0, folderpath.length() -1);
 			}
 			Map<String,Object> query = new HashMap<String,Object>();
 			query.put("filename", folderpath);
-			Map<String,Object> folder = this.database.queryStaticFile((String) vhost.getContext("database"), BUCKET, query);
+			Map<String,Object> folder = this.database.queryStaticFile(db, bucket, query);
 			if(folder == null || folder.get("contentType").equals("inode/directory")) {
-				ensureFolderExists(vhost, folderpath.substring(0, folderpath.lastIndexOf('/') + 1));
+				ensureFolderExists(db, bucket, folderpath.substring(0, folderpath.lastIndexOf('/') + 1));
 				Map<String,Object> file = new HashMap<String,Object>();
 				Map<String,Object> metadata = new HashMap<String,Object>();
 				metadata.put("folder", folderpath.substring(0, folderpath.lastIndexOf('/') +1 ));
@@ -144,7 +157,7 @@ public class FileRepositoryImpl implements FileRepository {
 				file.put("contentType", "inode/directory");
 				file.put("metadata", metadata);
 				try {
-					this.addFile(vhost, file, this.getClass().getResourceAsStream("/dummy.txt"));
+					this.addFile(db, bucket, file, this.getClass().getResourceAsStream("/dummy.txt"));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

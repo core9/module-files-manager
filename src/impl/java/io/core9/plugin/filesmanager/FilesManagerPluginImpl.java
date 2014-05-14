@@ -112,11 +112,11 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 						metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
 						metadata.put("type", "File");
 						fileMap.put("metadata", metadata);
-						repository.addFile(bucket.getDatabase(), bucket.getBucket(), fileMap, new FileInputStream(file.getFilepath()));
+						repository.addFile(bucket.getDatabase(), bucket.getName(), fileMap, new FileInputStream(file.getFilepath()));
 						new File(file.getFilepath()).delete();
 					}
 				} else {
-					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getBucket(), request.getBodyAsMap(), this.getClass().getResourceAsStream("/dummy.txt")));
+					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap(), this.getClass().getResourceAsStream("/dummy.txt")));
 				}
 			} catch (IOException e) {
 				request.getResponse().setStatusCode(500);
@@ -126,7 +126,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 		case GET:
 		default:
 			String folder = (String) request.getParams().get("folder");
-			request.getResponse().sendJsonArray(repository.getFolderContents(bucket.getDatabase(), bucket.getBucket(), folder));
+			request.getResponse().sendJsonArray(repository.getFolderContents(bucket.getDatabase(), bucket.getName(), folder));
 			break;
 		}
 	}
@@ -167,24 +167,24 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	private void process(Request request, String fileId, BucketConf bucket) {
 		switch(request.getMethod()) {
 		case DELETE:
-			repository.removeFile(bucket.getDatabase(), bucket.getBucket(), fileId);
+			repository.removeFile(bucket.getDatabase(), bucket.getName(), fileId);
 			request.getResponse().end();
 			break;
 		case PUT:
 			if(request.getParams().get("contents") == null) {
-				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getBucket(), request.getBodyAsMap(), fileId));
+				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap(), fileId));
 			} else {
 				// TODO Only supports textual updates, allow files as well
-				repository.updateFileContents(bucket.getDatabase(), bucket.getBucket(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().get("content")).getBytes()));
+				repository.updateFileContents(bucket.getDatabase(), bucket.getName(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().get("content")).getBytes()));
 			}
 			break;
 		case GET:
 		default:
 			if(request.getParams().get("contents") == null) {
-				request.getResponse().sendJsonMap(repository.getFile(bucket.getDatabase(), bucket.getBucket(), fileId));
+				request.getResponse().sendJsonMap(repository.getFile(bucket.getDatabase(), bucket.getName(), fileId));
 			} else {
 				try {
-					request.getResponse().sendBinary(ByteStreams.toByteArray(repository.getFileContents(bucket.getDatabase(), bucket.getBucket(), fileId)));
+					request.getResponse().sendBinary(ByteStreams.toByteArray(repository.getFileContents(bucket.getDatabase(), bucket.getName(), fileId)));
 				} catch (IOException e) {
 					request.getResponse().setStatusCode(404);
 				}

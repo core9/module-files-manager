@@ -14,6 +14,7 @@ import io.core9.plugin.server.vertx.VertxServer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.xeoh.plugins.base.annotations.PluginImplementation;
@@ -34,10 +35,11 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	private MongoDatabase database;
 	
 	private CrudRepository<BucketConf> config;
+	private Map<VirtualHost,Map<String,BucketConf>> buckets = new HashMap<VirtualHost,Map<String,BucketConf>>();
 	
 	@PluginLoaded
 	public void onVertxServerLoaded(VertxServer server){
-		this.server = server;;
+		this.server = server;
 	}
 	
 	@PluginLoaded
@@ -103,16 +105,31 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	@Override
 	public void process(VirtualHost[] vhosts) {
 		for(VirtualHost vhost : vhosts) {
+			Map<String,BucketConf> bucketPrefixes = new HashMap<String,BucketConf>();
 			for(BucketConf conf : config.getAll(vhost)) {
 				if(conf.getPrefix() != null && !conf.getPrefix().equals("")) {
+					bucketPrefixes.put(conf.getPrefix(), conf);
 					try {
 						this.database.addDatabase(conf.getHost(), conf.getDatabase(), conf.getUsername(), conf.getPassword());
 					} catch (UnknownHostException e) {
 						e.printStackTrace();
 					}
-					this.addNewBucketListener(vhost, conf.getPrefix(), conf.getDatabase(), conf.getBucket());
+					this.addNewBucketListener(vhost, conf.getPrefix(), conf.getDatabase(), conf.getName());
 				}
 			}
+			buckets.put(vhost, bucketPrefixes);
 		}
+	}
+	
+	@Override
+	public Map<String,Object> getFileContents(VirtualHost vhost, String path) {
+		Map<String,BucketConf> bucketPrefixes = buckets.get(vhost);
+		for(Map.Entry<String,BucketConf> entry : bucketPrefixes.entrySet()) {
+			if(path.startsWith(entry.getKey())) {
+				String filePath = path.substring(entry.getValue().getPrefix().length());
+				return repository.getFileContentsByName(entry.getValue().getDatabase(), entry.getValue().getName(), filePath); 
+			}
+		}
+		return null;
 	}
 }

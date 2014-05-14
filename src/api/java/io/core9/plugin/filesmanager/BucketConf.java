@@ -15,7 +15,7 @@ public class BucketConf extends AbstractCrudEntity implements CrudEntity {
 	private String database;
 	private String username;
 	private String password;
-	private String bucket;
+	private String name;
 
 	public String getPrefix() {
 		return prefix;
@@ -57,12 +57,12 @@ public class BucketConf extends AbstractCrudEntity implements CrudEntity {
 		this.password = password;
 	}
 	
-	public String getBucket() {
-		return bucket;
+	public String getName() {
+		return name;
 	}
 
-	public void setBucket(String bucket) {
-		this.bucket = bucket;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@SuppressWarnings("serial")

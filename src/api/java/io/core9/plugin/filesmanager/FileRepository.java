@@ -31,10 +31,14 @@ public interface FileRepository extends Core9Plugin {
 	Map<String, Object> saveFile(String database, String bucket, Map<String, Object> bodyAsMap, String fileId);
 	
 	void ensureFolderExists(VirtualHost vhost, String folderpath);
+	
+	void ensureFolderExists(String db, String bucket, String folderpath);
 
 	void removeFile(VirtualHost virtualHost, String fileId);
 	
 	void removeFile(String database, String bucket, String fileId);
+	
+	void removeFiles(String database, String bucket, Map<String,Object> query);
 
 	void updateFileContents(VirtualHost vhost, String fileId, InputStream stream);
 	
