@@ -49,6 +49,7 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	
 	@Override
 	public void addNewBucketListener(final VirtualHost vhost, final String prefix, final String database, final String bucket) {
+		server.deregister(vhost, prefix + "/.*");
 		server.use(vhost, prefix + "/.*", new Middleware() {
 
 			@Override
@@ -60,7 +61,9 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 						request.getResponse().setStatusCode(404);
 						request.getResponse().setStatusMessage("File not found");
 					}else{
-						request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+						if(file.get("ContentType") != null) {
+							request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+						}
 						InputStream result = (InputStream) file.get("stream");
 						request.getResponse().sendBinary(ByteStreams.toByteArray(result));
 						result.close();
