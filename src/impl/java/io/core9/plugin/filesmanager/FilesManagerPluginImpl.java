@@ -82,7 +82,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 						new File(file.getFilepath()).delete();
 					}
 				} else {
-					request.getResponse().sendJsonMap(repository.addFile(request.getVirtualHost(), request.getBodyAsMap(), this.getClass().getResourceAsStream("/dummy.txt")));
+					request.getResponse().sendJsonMap(repository.addFile(request.getVirtualHost(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
 				}
 			} catch (IOException e) {
 				request.getResponse().setStatusCode(500);
@@ -116,7 +116,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 						new File(file.getFilepath()).delete();
 					}
 				} else {
-					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap(), this.getClass().getResourceAsStream("/dummy.txt")));
+					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
 				}
 			} catch (IOException e) {
 				request.getResponse().setStatusCode(500);
@@ -142,10 +142,10 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case PUT:
 			if(request.getParams().get("contents") == null) {
-				request.getResponse().sendJsonMap(repository.saveFile(request.getVirtualHost(), request.getBodyAsMap(), fileId));
+				request.getResponse().sendJsonMap(repository.saveFile(request.getVirtualHost(), request.getBodyAsMap().toBlocking().last(), fileId));
 			} else {
 				// TODO Only supports textual updates, allow files as well
-				repository.updateFileContents(request.getVirtualHost(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().get("content")).getBytes()));
+				repository.updateFileContents(request.getVirtualHost(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().toBlocking().last().get("content")).getBytes()));
 				
 			}
 			break;
@@ -172,10 +172,10 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case PUT:
 			if(request.getParams().get("contents") == null) {
-				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap(), fileId));
+				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap().toBlocking().last(), fileId));
 			} else {
 				// TODO Only supports textual updates, allow files as well
-				repository.updateFileContents(bucket.getDatabase(), bucket.getName(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().get("content")).getBytes()));
+				repository.updateFileContents(bucket.getDatabase(), bucket.getName(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().toBlocking().last().get("content")).getBytes()));
 			}
 			break;
 		case GET:
