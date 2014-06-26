@@ -6,6 +6,7 @@ import io.core9.plugin.database.repository.NoCollectionNamePresentException;
 import io.core9.plugin.database.repository.RepositoryFactory;
 import io.core9.plugin.filesmanager.BucketConf;
 import io.core9.plugin.filesmanager.FileRepository;
+import io.core9.plugin.server.Server;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.handler.Middleware;
 import io.core9.plugin.server.request.Request;
@@ -29,7 +30,8 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	@InjectPlugin
 	private FileRepository repository;
 	
-	private VertxServer server;
+	@InjectPlugin
+	private Server server;
 	
 	@InjectPlugin
 	private MongoDatabase database;
