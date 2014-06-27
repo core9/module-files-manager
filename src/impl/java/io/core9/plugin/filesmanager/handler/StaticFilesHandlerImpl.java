@@ -10,7 +10,6 @@ import io.core9.plugin.server.Server;
 import io.core9.plugin.server.VirtualHost;
 import io.core9.plugin.server.handler.Middleware;
 import io.core9.plugin.server.request.Request;
-import io.core9.plugin.server.vertx.VertxServer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +39,7 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	private Map<VirtualHost,Map<String,BucketConf>> buckets = new HashMap<VirtualHost,Map<String,BucketConf>>();
 	
 	@PluginLoaded
-	public void onVertxServerLoaded(VertxServer server){
+	public void onServerLoaded(Server server){
 		this.server = server;
 	}
 	
