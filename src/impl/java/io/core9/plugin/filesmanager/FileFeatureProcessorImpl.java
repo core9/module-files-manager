@@ -5,6 +5,7 @@ import io.core9.plugin.server.VirtualHost;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Map;
 
@@ -54,9 +55,11 @@ public class FileFeatureProcessorImpl implements FileFeatureProcessor {
 		if(item.get("id") != null) {
 			if(item.get("remove") == null) {
 				try {
-					Files.copy(
-						files.getFileContents(vhost, (String) item.get("id")), 
-						new File(repository, (String) item.get("id")).toPath()
+					InputStream stream = files.getFileContents(vhost, (String) item.get("id"));
+					if(stream == null) {
+						return false;
+					}
+					Files.copy(stream, new File(repository, (String) item.get("id")).toPath()
 					);
 					return true;
 				} catch (IOException e) {
