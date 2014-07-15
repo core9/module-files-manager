@@ -67,27 +67,30 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	private void process(Request request) {
 		switch(request.getMethod()) {
 		case POST:
+			request.getResponse().setEnded(true); // Temporarily block response
+			request.getBodyAsMap().toBlocking().last();
 			try {
-				if(request.getContext("files") != null) {
-					for(FileUpload file : (List<FileUpload>) request.getContext("files")) {
-						String filename = file.getFilename();
-						Map<String,Object> fileMap = new HashMap<String,Object>();
-						fileMap.put("filename", filename.substring(filename.lastIndexOf('/') + 1));
-						fileMap.put("contentType", file.getContentType());
-						Map<String,Object> metadata = new HashMap<String,Object>();
-						metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
-						metadata.put("type", "File");
-						fileMap.put("metadata", metadata);
-						repository.addFile(request.getVirtualHost(), fileMap, new FileInputStream(file.getFilepath()));
-						new File(file.getFilepath()).delete();
-					}
-				} else {
-					request.getResponse().sendJsonMap(repository.addFile(request.getVirtualHost(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
+			if(request.getContext("files") != null) {
+				for(FileUpload file : (List<FileUpload>) request.getContext("files")) {
+					String filename = file.getFilename();
+					Map<String,Object> fileMap = new HashMap<String,Object>();
+					fileMap.put("filename", filename.substring(filename.lastIndexOf('/') + 1));
+					fileMap.put("contentType", file.getContentType());
+					Map<String,Object> metadata = new HashMap<String,Object>();
+					metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
+					metadata.put("type", "File");
+					fileMap.put("metadata", metadata);
+					repository.addFile(request.getVirtualHost(), fileMap, new FileInputStream(file.getFilepath()));
+					new File(file.getFilepath()).delete();
+					request.getResponse().end();
 				}
+			} else {
+				request.getResponse().sendJsonMap(repository.addFile(request.getVirtualHost(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
+			}
 			} catch (IOException e) {
 				request.getResponse().setStatusCode(500);
 				request.getResponse().end("500");
-			}
+			};
 			break;
 		case GET:
 		default:
@@ -101,27 +104,29 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 	private void process(Request request, BucketConf bucket) {
 		switch(request.getMethod()) {
 		case POST:
-			try {
-				if(request.getContext("files") != null) {
-					for(FileUpload file : (List<FileUpload>) request.getContext("files")) {
-						String filename = file.getFilename();
-						Map<String,Object> fileMap = new HashMap<String,Object>();
-						fileMap.put("filename", filename.substring(filename.lastIndexOf('/') + 1));
-						fileMap.put("contentType", file.getContentType());
-						Map<String,Object> metadata = new HashMap<String,Object>();
-						metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
-						metadata.put("type", "File");
-						fileMap.put("metadata", metadata);
-						repository.addFile(bucket.getDatabase(), bucket.getName(), fileMap, new FileInputStream(file.getFilepath()));
-						new File(file.getFilepath()).delete();
+			request.getBody().subscribe((value) -> {
+				try {
+					if(request.getContext("files") != null) {
+						for(FileUpload file : (List<FileUpload>) request.getContext("files")) {
+							String filename = file.getFilename();
+							Map<String,Object> fileMap = new HashMap<String,Object>();
+							fileMap.put("filename", filename.substring(filename.lastIndexOf('/') + 1));
+							fileMap.put("contentType", file.getContentType());
+							Map<String,Object> metadata = new HashMap<String,Object>();
+							metadata.put("folder", filename.substring(0, filename.lastIndexOf('/') + 1));
+							metadata.put("type", "File");
+							fileMap.put("metadata", metadata);
+							repository.addFile(bucket.getDatabase(), bucket.getName(), fileMap, new FileInputStream(file.getFilepath()));
+							new File(file.getFilepath()).delete();
+						}
+					} else {
+						request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
 					}
-				} else {
-					request.getResponse().sendJsonMap(repository.addFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap().toBlocking().last(), this.getClass().getResourceAsStream("/dummy.txt")));
+				} catch (IOException e) {
+					request.getResponse().setStatusCode(500);
+					request.getResponse().end("500");
 				}
-			} catch (IOException e) {
-				request.getResponse().setStatusCode(500);
-				request.getResponse().end("500");
-			}
+			});
 			break;
 		case GET:
 		default:
