@@ -143,7 +143,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 		switch(request.getMethod()) {
 		case DELETE:
 			repository.removeFile(request.getVirtualHost(), fileId);
-			request.getResponse().end();
+			request.getResponse().end("Success");
 			break;
 		case PUT:
 			if(request.getParams().get("contents") == null) {
@@ -151,7 +151,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			} else {
 				// TODO Only supports textual updates, allow files as well
 				repository.updateFileContents(request.getVirtualHost(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().toBlocking().last().get("content")).getBytes()));
-				
+				request.getResponse().end("Success");
 			}
 			break;
 		case GET:
@@ -173,7 +173,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 		switch(request.getMethod()) {
 		case DELETE:
 			repository.removeFile(bucket.getDatabase(), bucket.getName(), fileId);
-			request.getResponse().end();
+			request.getResponse().end("Success");
 			break;
 		case PUT:
 			if(request.getParams().get("contents") == null) {
@@ -181,6 +181,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			} else {
 				// TODO Only supports textual updates, allow files as well
 				repository.updateFileContents(bucket.getDatabase(), bucket.getName(), fileId, new ByteArrayInputStream(((String) request.getBodyAsMap().toBlocking().last().get("content")).getBytes()));
+				request.getResponse().end("Success");
 			}
 			break;
 		case GET:
