@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +46,11 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 
 	@Override
 	public void handle(Request request) {
-		String fileId = (String) request.getParams().get("type");
-		String bucket = (String) request.getParams().get("bucket");
-		if(bucket != null) {
-			BucketConf conf = buckets.read(request.getVirtualHost(), bucket);
+		System.out.println(request);
+		String fileId = (String) request.getPathParams().get("type");
+		Deque<String> bucketDeque = request.getQueryParams().get("bucket");
+		if(bucketDeque != null) {
+			BucketConf conf = buckets.read(request.getVirtualHost(), bucketDeque.getFirst());
 			if(fileId == null) {
 				process(request, conf);
 			} else {
@@ -94,7 +96,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case GET:
 		default:
-			String folder = (String) request.getParams().get("folder");
+			String folder = (String) request.getQueryParams().get("folder").getFirst();
 			request.getResponse().sendJsonArray(repository.getFolderContents(request.getVirtualHost(), folder));
 			break;
 		}
@@ -130,7 +132,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case GET:
 		default:
-			String folder = (String) request.getParams().get("folder");
+			String folder = (String) request.getQueryParams().get("folder").getFirst();
 			request.getResponse().sendJsonArray(repository.getFolderContents(bucket.getDatabase(), bucket.getName(), folder));
 			break;
 		}
@@ -146,7 +148,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			request.getResponse().end("Success");
 			break;
 		case PUT:
-			if(request.getParams().get("contents") == null) {
+			if(request.getQueryParams().get("contents") == null) {
 				request.getResponse().sendJsonMap(repository.saveFile(request.getVirtualHost(), request.getBodyAsMap().toBlocking().last(), fileId));
 			} else {
 				// TODO Only supports textual updates, allow files as well
@@ -156,7 +158,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case GET:
 		default:
-			if(request.getParams().get("contents") == null) {
+			if(request.getQueryParams().get("contents") == null) {
 				request.getResponse().sendJsonMap(repository.getFile(request.getVirtualHost(), fileId));
 			} else {
 				try {
@@ -176,7 +178,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			request.getResponse().end("Success");
 			break;
 		case PUT:
-			if(request.getParams().get("contents") == null) {
+			if(request.getQueryParams().get("contents") == null) {
 				request.getResponse().sendJsonMap(repository.saveFile(bucket.getDatabase(), bucket.getName(), request.getBodyAsMap().toBlocking().last(), fileId));
 			} else {
 				// TODO Only supports textual updates, allow files as well
@@ -186,7 +188,7 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 			break;
 		case GET:
 		default:
-			if(request.getParams().get("contents") == null) {
+			if(request.getQueryParams().get("contents") == null) {
 				request.getResponse().sendJsonMap(repository.getFile(bucket.getDatabase(), bucket.getName(), fileId));
 			} else {
 				try {
