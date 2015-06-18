@@ -65,6 +65,9 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 						if(file.get("ContentType") != null) {
 							request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
 						}
+						if(file.containsKey("Access-Control-Allow-Origin")) {
+							request.getResponse().putHeader("Access-Control-Allow-Origin", (String) file.get("Access-Control-Allow-Origin"));
+						}
 						InputStream result = (InputStream) file.get("stream");
 						request.getResponse().sendBinary(ByteStreams.toByteArray(result));
 						result.close();
@@ -93,6 +96,9 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 						request.getResponse().setStatusMessage("File not found");
 					}else{
 						request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+						if(file.containsKey("Access-Control-Allow-Origin")) {
+							request.getResponse().putHeader("Access-Control-Allow-Origin", (String) file.get("Access-Control-Allow-Origin"));
+						}
 						InputStream result = (InputStream) file.get("stream");
 						request.getResponse().sendBinary(ByteStreams.toByteArray(result));
 						result.close();
