@@ -113,7 +113,13 @@ public class FileRepositoryImpl implements FileRepository {
 
 		try {
 			result.put("stream", database.getStaticFile(db, bucket, query));
-			result.put("ContentType", database.queryStaticFile(db, bucket, query).get("contentType"));
+			Map<String,Object> fileInfo = database.queryStaticFile(db, bucket, query);
+			result.put("ContentType", fileInfo.get("contentType"));
+			@SuppressWarnings("unchecked")
+			Map<String,Object> metaData = (Map<String, Object>) fileInfo.get("metadata");
+			if(metaData != null && metaData.containsKey("Access-Control-Allow-Origin")) {
+				result.put("Access-Control-Allow-Origin", metaData.get("Access-Control-Allow-Origin"));
+			}
 			return result;
 		} catch (Exception e) {
 
