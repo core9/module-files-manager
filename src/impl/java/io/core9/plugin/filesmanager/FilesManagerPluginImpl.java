@@ -1,13 +1,5 @@
 package io.core9.plugin.filesmanager;
 
-import io.core9.plugin.database.repository.CrudRepository;
-import io.core9.plugin.database.repository.NoCollectionNamePresentException;
-import io.core9.plugin.database.repository.RepositoryFactory;
-import io.core9.plugin.filesmanager.sync.FileHashSyncer;
-import io.core9.plugin.server.VirtualHost;
-import io.core9.plugin.server.request.FileUpload;
-import io.core9.plugin.server.request.Request;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,11 +12,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.io.ByteStreams;
+
+import io.core9.plugin.database.repository.CrudRepository;
+import io.core9.plugin.database.repository.NoCollectionNamePresentException;
+import io.core9.plugin.database.repository.RepositoryFactory;
+import io.core9.plugin.filesmanager.sync.FileHashSyncer;
+import io.core9.plugin.filesmanager.sync.FileSyncer;
+import io.core9.plugin.server.VirtualHost;
+import io.core9.plugin.server.request.FileUpload;
+import io.core9.plugin.server.request.Request;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 import net.xeoh.plugins.base.annotations.events.PluginLoaded;
 import net.xeoh.plugins.base.annotations.injections.InjectPlugin;
-
-import com.google.common.io.ByteStreams;
 
 @PluginImplementation
 public class FilesManagerPluginImpl implements FilesManagerPlugin {
@@ -203,14 +203,18 @@ public class FilesManagerPluginImpl implements FilesManagerPlugin {
 
 	@Override
 	public void syncDirectory(VirtualHost vhost, String directory) {
+		syncDirectory(vhost, directory, new FileHashSyncer());
+	}
+	
+	@Override
+	public void syncDirectory(VirtualHost vhost, String directory, FileSyncer sync) {
 		Path dir = Paths.get(directory);
 		try {
-			FileHashSyncer sync = new FileHashSyncer(vhost, repository, directory);
+			sync.setVirtualHost(vhost).setFileRepostiroy(repository).setPath(directory);
 			Files.walkFileTree(dir, sync);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
 	
 }

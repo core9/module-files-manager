@@ -1,13 +1,9 @@
 package io.core9.plugin.filesmanager.sync;
 
-import io.core9.plugin.filesmanager.FileRepository;
-import io.core9.plugin.server.VirtualHost;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -20,17 +16,14 @@ import java.util.Map;
 
 import com.google.common.io.ByteStreams;
 
-public class FileHashSyncer implements FileVisitor<Path> {
+import io.core9.plugin.filesmanager.FileRepository;
+import io.core9.plugin.server.VirtualHost;
+
+public class FileHashSyncer implements FileSyncer {
 
 	private FileRepository repository;
 	private VirtualHost vhost;
 	private String rootPath;
-
-	public FileHashSyncer(VirtualHost vhost, FileRepository repository, String path) {
-		this.vhost = vhost;
-		this.rootPath = path;
-		this.repository = repository;
-	}
 
 	@Override
 	public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes attrs) throws IOException {
@@ -70,7 +63,7 @@ public class FileHashSyncer implements FileVisitor<Path> {
 	 * @param strPath
 	 * @throws IOException
 	 */
-	private void insertFile(InputStream stream, String strPath) throws IOException {
+	protected void insertFile(InputStream stream, String strPath) throws IOException {
 		System.out.println("INSERTING: " + strPath);
 		String folder = strPath.substring(0, strPath.lastIndexOf('/') + 1);
 		String filePath = strPath.substring(strPath.lastIndexOf('/') + 1);
@@ -90,7 +83,7 @@ public class FileHashSyncer implements FileVisitor<Path> {
 	 * Update an existing file
 	 * @throws IOException 
 	 */
-	private void updateFile(InputStream stream, Map<String,Object> file, String strPath) throws IOException {
+	protected void updateFile(InputStream stream, Map<String,Object> file, String strPath) throws IOException {
 		MessageDigest md;
 		try {
 			md = MessageDigest.getInstance("MD5");
@@ -110,5 +103,38 @@ public class FileHashSyncer implements FileVisitor<Path> {
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public FileSyncer setVirtualHost(VirtualHost vhost) {
+		this.vhost = vhost;
+		return this;
+	}
+
+	@Override
+	public FileSyncer setFileRepostiroy(FileRepository repository) {
+		this.repository = repository;
+		return this;
+	}
+
+	@Override
+	public FileSyncer setPath(String path) {
+		this.rootPath = path;
+		return this;
+	}
+
+	@Override
+	public VirtualHost getVirtualHost() {
+		return vhost;
+	}
+
+	@Override
+	public FileRepository getFileRepository() {
+		return repository;
+	}
+
+	@Override
+	public String getPath() {
+		return rootPath;
 	}
 }
