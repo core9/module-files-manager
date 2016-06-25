@@ -84,32 +84,63 @@ public class StaticFilesHandlerImpl implements StaticFilesHandler {
 	public void execute() {
 		if(server == null) return;
 		// Adds the default /static/ listener on all vhosts
-		server.use("/static/.*", new Middleware() {
-
-			@Override
-			public void handle(Request request) {
-				String filePath = request.getPath().replaceFirst("/static", "");
-				try {
-					Map<String,Object> file = repository.getFileContentsByName(request.getVirtualHost(), filePath);
-					if(file == null){
-						request.getResponse().setStatusCode(404);
-						request.getResponse().setStatusMessage("File not found");
-					}else{
-						request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
-						if(file.containsKey("Access-Control-Allow-Origin")) {
-							request.getResponse().putHeader("Access-Control-Allow-Origin", (String) file.get("Access-Control-Allow-Origin"));
-						}
-						InputStream result = (InputStream) file.get("stream");
-						request.getResponse().sendBinary(ByteStreams.toByteArray(result));
-						result.close();
-					}
-				} catch (IOException e) {
-					request.getResponse().setStatusCode(404);
-					request.getResponse().setStatusMessage("File not found");
-				}
-
-			}
+		server.use("/static/.*", (request) -> {
+            String filePath = request.getPath().replaceFirst("/static", "");
+            try {
+                Map<String,Object> file = repository.getFileContentsByName(request.getVirtualHost(), filePath);
+                if(file == null){
+                    request.getResponse().setStatusCode(404);
+                    request.getResponse().setStatusMessage("File not found");
+                }else{
+                    request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+                    if(file.containsKey("Access-Control-Allow-Origin")) {
+                        request.getResponse().putHeader("Access-Control-Allow-Origin", (String) file.get("Access-Control-Allow-Origin"));
+                    }
+                    InputStream result = (InputStream) file.get("stream");
+                    request.getResponse().sendBinary(ByteStreams.toByteArray(result));
+                    result.close();
+                }
+            } catch (IOException e) {
+                request.getResponse().setStatusCode(404);
+                request.getResponse().setStatusMessage("File not found");
+            }
 		});
+
+		server.use("/favicon.ico", (request) -> {
+            try {
+                Map<String,Object> file = repository.getFileContentsByName(request.getVirtualHost(), "/favicon.ico");
+                if(file == null){
+                    request.getResponse().setStatusCode(404);
+                    request.getResponse().setStatusMessage("File not found");
+                } else {
+                    request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+                    InputStream result = (InputStream) file.get("stream");
+                    request.getResponse().sendBinary(ByteStreams.toByteArray(result));
+                    result.close();
+                }
+            } catch (IOException e) {
+                request.getResponse().setStatusCode(404);
+                request.getResponse().setStatusMessage("File not found");
+            }
+		});
+
+        server.use("/robots.txt", (request) -> {
+            try {
+                Map<String,Object> file = repository.getFileContentsByName(request.getVirtualHost(), "/robots.txt");
+                if(file == null){
+                    request.getResponse().setStatusCode(404);
+                    request.getResponse().setStatusMessage("File not found");
+                } else {
+                    request.getResponse().putHeader("Content-Type", (String) file.get("ContentType"));
+                    InputStream result = (InputStream) file.get("stream");
+                    request.getResponse().sendBinary(ByteStreams.toByteArray(result));
+                    result.close();
+                }
+            } catch (IOException e) {
+                request.getResponse().setStatusCode(404);
+                request.getResponse().setStatusMessage("File not found");
+            }
+        });
 	}
 	
 	@Override
